@@ -1,0 +1,11 @@
+{
+  "/cbr/*": {
+    "target": "http://www.cbr.ru",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel" : "debug",
+    "pathRewrite": {
+      "^/cbr": ""
+    }
+  }
+}
