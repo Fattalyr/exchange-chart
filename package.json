@@ -24,6 +24,7 @@
     "@ngrx/store": "^7.3.0",
     "@ngrx/store-devtools": "^7.3.0",
     "core-js": "^2.6.5",
+    "moment": "^2.24.0",
     "ngx-xml2json": "^1.0.2",
     "rxjs": "~6.4.0",
     "tslib": "^1.9.3",

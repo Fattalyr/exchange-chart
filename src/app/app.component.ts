@@ -11,7 +11,7 @@ export class AppComponent implements OnInit {
   }
   title = 'rates-exchange-ngrx';
   ngOnInit() {
-    this.rates.getRates().subscribe(rates => {
+    this.rates.getRates('01/01/2019','31/12/2019').subscribe(rates => {
       console.log(rates);
     });
   }
