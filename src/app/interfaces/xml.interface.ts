@@ -1,4 +1,4 @@
-export interface XMLAttributes {
+export interface IXMLAttributes {
   ID?: string;
   DateRange1?: string;
   DateRange2?: string;
@@ -6,15 +6,15 @@ export interface XMLAttributes {
   Date?: string;
   Id?: string;
 }
-export interface XMLDateRecord {
-  '@attributes'?: XMLAttributes;
+export interface IXMLDateRecord {
+  '@attributes'?: IXMLAttributes;
   Nominal: string;
   Value: string;
 }
-export interface XMLDateArray {
-  '@attributes'?: XMLAttributes;
-  Record: Array<XMLDateRecord>;
+export interface IXMLDateArray {
+  '@attributes'?: IXMLAttributes;
+  Record: Array<IXMLDateRecord>;
 }
-export interface XMLData {
-  ValCurs?: XMLDateArray;
+export interface IXMLData {
+  ValCurs?: IXMLDateArray;
 }

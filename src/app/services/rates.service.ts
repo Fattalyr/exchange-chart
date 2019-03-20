@@ -4,7 +4,7 @@ import { Observable, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { NgxXml2jsonService } from 'ngx-xml2json';
 import { isDevMode } from '@angular/core';
-import { XMLData } from '../interfaces/xml.interface';
+import { IXMLData } from '../interfaces/xml.interface';
 import * as moment from 'moment';
 
 @Injectable({
@@ -45,7 +45,7 @@ export class RatesService {
    * @param date1 - string format of date: 'DD/MM/YYYY'
    * @param date2 - string format of date: 'DD/MM/YYYY'
    */
-  public getRates(date1: string, date2: string): Observable<XMLData> {
+  public getRates(date1: string, date2: string): Observable<IXMLData> {
     const headers = new HttpHeaders({
       'Access-Control-Allow-Origin': '*',
       'Content-Type': 'text/xml'
