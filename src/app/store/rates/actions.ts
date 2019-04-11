@@ -1,5 +1,5 @@
 import { Action } from '@ngrx/store';
-import { IXMLDateArray } from '../../interfaces/xml.interface';
+import { IJSONPoint } from '../../interfaces/xml.interface';
 
 export enum ActionTypes {
   LOAD_REQUEST = '[RATES] Load Request',
@@ -10,6 +10,7 @@ export enum ActionTypes {
 
 export class LoadRequestAction implements Action {
   readonly type = ActionTypes.LOAD_REQUEST;
+  constructor(public payload: {startDate: string, endDate: string}) {}
 }
 
 export class LoadFailureAction implements Action {
@@ -19,7 +20,7 @@ export class LoadFailureAction implements Action {
 
 export class LoadSuccessAction implements Action {
   readonly type = ActionTypes.LOAD_SUCCESS;
-  constructor(public payload: { items: IXMLDateArray }) {}
+  constructor(public payload: IJSONPoint[]) {}
 }
 
 export class SelectTaskAction implements Action {

@@ -13,7 +13,7 @@ export function ratesReducer(state = initialState, action: Actions): IRatesState
     case ActionTypes.LOAD_SUCCESS: {
       return {
         ...state,
-        RATES: action.payload.items.Record,
+        rates: action.payload,
         isLoading: false,
         error: null
       };

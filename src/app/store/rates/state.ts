@@ -1,13 +1,13 @@
-import { IXMLDateRecord } from '../../interfaces/xml.interface';
+import { IJSONPoint } from '../../interfaces/xml.interface';
 
 export interface IRatesState {
-  RATES: Array<IXMLDateRecord>;
+  rates: Array<IJSONPoint>;
   isLoading?: boolean;
   error?: null | string;
 }
 
 export const initialState: IRatesState = {
-  RATES: [],
+  rates: [],
   isLoading: false,
   error: null
 };

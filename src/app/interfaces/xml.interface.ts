@@ -18,3 +18,8 @@ export interface IXMLDateArray {
 export interface IXMLData {
   ValCurs?: IXMLDateArray;
 }
+
+export interface IJSONPoint {
+  date: string;
+  value: number;
+}

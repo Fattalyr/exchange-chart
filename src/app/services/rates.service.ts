@@ -4,14 +4,15 @@ import { Observable, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { NgxXml2jsonService } from 'ngx-xml2json';
 import { isDevMode } from '@angular/core';
-import { IXMLData } from '../interfaces/xml.interface';
+import { IXMLData, IJSONPoint } from '../interfaces/xml.interface';
 import * as moment from 'moment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RatesService {
-  private readonly root = isDevMode ? '/cbr/scripts/XML_dynamic.asp?' : 'http://www.cbr.ru/scripts/XML_dynamic.asp?';
+  // private readonly root = isDevMode ? '/scripts/XML_dynamic.asp?' : 'http://www.cbr.ru/scripts/XML_dynamic.asp?';
+  private readonly root = '/scripts/XML_dynamic.asp?';
   private startDate = '01/01/2018';
   private endDate = '31/12/2018';
   private cbrURL = '';
@@ -40,12 +41,24 @@ export class RatesService {
     this.cbrURL = this.root + 'date_req1=' + this.startDate + '&date_req2=' + this.endDate + '&VAL_NM_RQ=R01235';
   }
 
+  public formatRates(rates: IXMLData): IJSONPoint[] {
+    if (!rates.ValCurs) { return []; }
+    const ratesArray = rates.ValCurs.Record;
+    const formattedRates = [];
+    ratesArray.forEach(rate => formattedRates.push({
+        date: rate['@attributes'].Date,
+        value: rate.Value
+      })
+    );
+    return formattedRates;
+  }
+
   /**
    * Get range of date, returns object with currency rates.
    * @param date1 - string format of date: 'DD/MM/YYYY'
    * @param date2 - string format of date: 'DD/MM/YYYY'
    */
-  public getRates(date1: string, date2: string): Observable<IXMLData> {
+  public getRates(date1: string, date2: string): Observable<IJSONPoint[]> {
     const headers = new HttpHeaders({
       'Access-Control-Allow-Origin': '*',
       'Content-Type': 'text/xml'
@@ -57,8 +70,9 @@ export class RatesService {
           const parser = new DOMParser();
           const xml = parser.parseFromString(rates.toString(), 'text/xml');
           return this.xmlToJson.xmlToJson(xml);
-        },
-        catchError(() => throwError('Data not available.')))
+        }),
+        map(rates => this.formatRates(rates)),
+        catchError(status => throwError(status))
       );
   }
 
