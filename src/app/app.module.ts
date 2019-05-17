@@ -10,6 +10,8 @@ import { MainComponent } from './pages/main/main.component';
 import { ChooseDatesComponent } from './pages/choose-dates/choose-dates.component';
 import { NotFoundComponent } from './pages/not-found/not-found.component';
 
+import { MatDatepickerModule } from '@angular/material/datepicker';
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -21,7 +23,8 @@ import { NotFoundComponent } from './pages/not-found/not-found.component';
     BrowserModule,
     HttpClientModule,
     RootStoreModule,
-    AppRoutingModule
+    AppRoutingModule,
+    MatDatepickerModule
   ],
   providers: [],
   bootstrap: [AppComponent]
