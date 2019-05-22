@@ -9,7 +9,7 @@ import { RangeEffects } from './effects';
   declarations: [],
   imports: [
     CommonModule,
-    StoreModule.forFeature('rates', rangeReducer),
+    StoreModule.forFeature('rangeData', rangeReducer),
     EffectsModule.forFeature([RangeEffects])
   ],
   providers: [RangeEffects]

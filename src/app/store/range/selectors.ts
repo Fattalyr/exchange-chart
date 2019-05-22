@@ -4,7 +4,7 @@ import { IRangeState } from './state';
 export const selectState: MemoizedSelector<
   object,
   IRangeState
-  > = createFeatureSelector<IRangeState>('range');
+  > = createFeatureSelector<IRangeState>('rangeData');
 
 export const getStartDate = (state: IRangeState): string => state.startDate;
 export const getEndDate = (state: IRangeState): string => state.endDate;

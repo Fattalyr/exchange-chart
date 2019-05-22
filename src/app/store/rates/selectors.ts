@@ -5,7 +5,7 @@ import { IJSONPoint } from 'src/app/interfaces/xml.interface';
 export const selectState: MemoizedSelector<
   object,
   IRatesState
-  > = createFeatureSelector<IRatesState>('rates');
+  > = createFeatureSelector<IRatesState>('ratesData');
 
 export const getIsLoading = (state: IRatesState): boolean => state.isLoading;
 export const selectRatesAreLoading = createSelector(selectState, getIsLoading);

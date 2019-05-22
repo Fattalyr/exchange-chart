@@ -9,7 +9,7 @@ import { RatesEffects } from './effects';
   declarations: [],
   imports: [
     CommonModule,
-    StoreModule.forFeature('rates', ratesReducer),
+    StoreModule.forFeature('ratesData', ratesReducer),
     EffectsModule.forFeature([RatesEffects])
   ],
   providers: [RatesEffects]
