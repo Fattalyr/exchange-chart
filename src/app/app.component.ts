@@ -28,13 +28,6 @@ export class AppComponent implements OnInit {
     //   console.log(rates);
     // });
 
-    this.store.dispatch(
-      new RatesActions.LoadRequestAction({
-        startDate: '01/01/2019',
-        endDate: '10/04/2019'
-      })
-    );
-
     this.store.pipe(select(
       StoreSelectors.selectAllRates
     )).subscribe((rates) => {

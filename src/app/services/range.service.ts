@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import * as RootStoreState from '../store/state';
-import { RangeActions } from '../store';
+import { ChangeRangeAction } from '../store/range/actions';
 
 @Injectable({
   providedIn: 'root'
@@ -11,6 +11,6 @@ export class RangeService {
 
   callForDateWithNewRange(startDate: string, endDate: string) {
     this.store
-      .dispatch(new RangeActions.ChangeRangeAction({startDate, endDate}));
+      .dispatch(new ChangeRangeAction({startDate, endDate}));
   }
 }

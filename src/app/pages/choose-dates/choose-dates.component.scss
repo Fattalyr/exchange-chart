@@ -1,3 +1,9 @@
 h1 {
   color: green;
 }
+.choose-dates {
+  display: flex;
+  max-width: 420px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
