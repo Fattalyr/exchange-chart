@@ -5,6 +5,7 @@ import { DateAdapter } from '@angular/material';
 import { MyDateAdapter } from './custom-date-adapter';
 import { StoreState, RangeActions } from '../../store';
 import * as moment from 'moment';
+import { RatesActions } from '../../store/rates';
 
 @Component({
   selector: 'app-choose-dates',
@@ -20,19 +21,10 @@ export class ChooseDatesComponent implements OnInit {
 
   constructor(
     private store: Store<StoreState.State>
-  ) {
-    console.log(this.transformDate(this.endDate.value));
-  }
+  ) { }
 
   ngOnInit() {
-    setTimeout(() => {
-      this.store.dispatch(
-        new RangeActions.ChangeRangeAction({
-          startDate: this.transformDate(this.startDate.value),
-          endDate: this.transformDate(this.endDate.value)
-        })
-      );
-    });
+    this.rangeChange();
   }
 
   generateStartDate(): Date {
@@ -43,5 +35,58 @@ export class ChooseDatesComponent implements OnInit {
 
   transformDate(date: string): string {
     return moment(date).format('DD/MM/YYYY');
+  }
+
+  /**
+   * Обновляет диапазон в хранилище.
+   * Реагирует на изменения даты и запрашивает с сервера ЦБР
+   * новый диапазон котировок.
+   */
+  rangeChange(): void {
+    const startDate = this.transformDate(this.startDate.value);
+    const endDate = this.transformDate(this.endDate.value);
+
+    this.store.dispatch(
+      new RangeActions.ChangeRangeAction({
+        startDate: startDate,
+        endDate: endDate
+      })
+    );
+
+    this.store.dispatch(
+      new RatesActions.LoadRequestAction({
+        startDate: startDate,
+        endDate: endDate
+      })
+    );
+  }
+
+  picker1Filter = (d: Date): boolean => {
+    const checkingDate = moment(d);
+    const minimumDate = moment('11-04-1997');
+    const today = moment();
+    return !(checkingDate.isBefore(minimumDate) || checkingDate.isAfter(today));
+  }
+
+  picker2Filter = (d: Date): boolean => {
+    const startDate = moment(this.startDate.value);
+    const checkingDate = moment(d);
+    const minimumDate = moment('11-04-1997');
+    const today = moment();
+    return !(checkingDate.isBefore(minimumDate) || checkingDate.isAfter(today) || checkingDate.isBefore(startDate));
+  }
+
+  checkForOverdating(): void {
+    const startDate = moment(this.startDate.value);
+    const endDate = moment(this.endDate.value);
+    const today = moment();
+    if (startDate.isSame(today)) {
+      this.endDate.setValue(new Date());
+      return;
+    }
+    if (startDate.isAfter(endDate)) {
+      this.endDate.setValue(startDate.toDate());
+      return;
+    }
   }
 }
