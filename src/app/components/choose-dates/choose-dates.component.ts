@@ -34,7 +34,7 @@ export class ChooseDatesComponent implements OnInit {
   }
 
   transformDate(date: string): string {
-    return moment(date).format('DD/MM/YYYY');
+    return moment(new Date(date)).format('DD/MM/YYYY');
   }
 
   /**
@@ -63,19 +63,24 @@ export class ChooseDatesComponent implements OnInit {
 
   picker1Filter = (d: Date): boolean => {
     const checkingDate = moment(d);
-    const minimumDate = moment('11-04-1997');
-    const today = moment();
-    return !(checkingDate.isBefore(minimumDate) || checkingDate.isAfter(today));
+    const minimumDate = moment('11-04-1997', 'MM-DD-YYYY');
+    const yesterday = moment().subtract(1, 'd');
+    return !(checkingDate.isBefore(minimumDate) || checkingDate.isAfter(yesterday));
   }
 
   picker2Filter = (d: Date): boolean => {
-    const startDate = moment(this.startDate.value);
+    const startDate = moment(this.startDate.value).add(1, 'd');;
     const checkingDate = moment(d);
-    const minimumDate = moment('11-04-1997');
+    const minimumDate = moment('11-04-1997', 'MM-DD-YYYY').add(1, 'd');
     const today = moment();
     return !(checkingDate.isBefore(minimumDate) || checkingDate.isAfter(today) || checkingDate.isBefore(startDate));
   }
 
+  /**
+   * Проверяем, не выбрана ли стартовая дата позже, чем конечная дата.
+   * Если да, то конечную дату меняем на стартовую, т.е. делаем,
+   * чтобы они совпадали.
+   */
   checkForOverdating(): void {
     const startDate = moment(this.startDate.value);
     const endDate = moment(this.endDate.value);
@@ -85,7 +90,7 @@ export class ChooseDatesComponent implements OnInit {
       return;
     }
     if (startDate.isAfter(endDate)) {
-      this.endDate.setValue(startDate.toDate());
+      this.endDate.setValue(startDate.add(1, 'd').toDate());
       return;
     }
   }

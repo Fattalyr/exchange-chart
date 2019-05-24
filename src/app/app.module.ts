@@ -5,13 +5,19 @@ import { HttpClientModule } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
 
+// Components
 import { AppComponent } from './app.component';
-import { RootStoreModule } from './store';
+import { ChooseDatesComponent } from './components/choose-dates/choose-dates.component';
 
+// Modules
+import { RootStoreModule } from './store';
+import { CanvasModule } from './components/canvas/canvas.module';
+
+// Pages
 import { MainComponent } from './pages/main/main.component';
-import { ChooseDatesComponent } from './pages/choose-dates/choose-dates.component';
 import { NotFoundComponent } from './pages/not-found/not-found.component';
 
+// Material
 import { MatNativeDateModule } from '@angular/material';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -31,6 +37,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
     FormsModule,
     ReactiveFormsModule,
     RootStoreModule,
+    CanvasModule,
     AppRoutingModule,
     MatFormFieldModule,
     MatInputModule,
