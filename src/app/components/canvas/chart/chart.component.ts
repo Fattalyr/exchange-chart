@@ -1,16 +1,15 @@
 import {
   Component,
   OnInit,
-  AfterViewInit,
   ElementRef,
   ViewChild,
-  Renderer2,
   ChangeDetectionStrategy,
   Input
 } from '@angular/core';
 import { IJSONPoint } from 'src/app/interfaces/xml.interface';
 import { CanvasLayer } from 'src/app/models/canvas-layer.class';
 import * as moment from 'moment';
+import { ITimeline } from '../../../interfaces/timeline.interface';
 
 @Component({
   selector: 'app-chart',
@@ -50,7 +49,7 @@ export class ChartComponent implements OnInit {
    * Рассчитываем количество лет, заполняем
    * ими массив в объекте this.chartCanvas.
    */
-  calculateYears() {
+  calculateYears(): void {
     if (!this.rates[0]) {
       return;
     }
@@ -68,7 +67,10 @@ export class ChartComponent implements OnInit {
    * Рассчитываем количество месяцев, заполняем
    * ими массив в объекте this.chartCanvas.
    */
-  calculateMonths() {
+  calculateMonths(): void {
+    if (!this.rates[0]) {
+      return;
+    }
 
   }
 

@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Observable, throwError, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { NgxXml2jsonService } from 'ngx-xml2json';
 import { isDevMode } from '@angular/core';
 import { IXMLData, IJSONPoint } from '../interfaces/xml.interface';
+import { ITimeline } from '../interfaces/timeline.interface';
 import * as moment from 'moment';
 
 @Injectable({
@@ -89,6 +90,59 @@ export class RatesService {
       return momentDate2.format('DD/MM/YYYY');
     }
     return momentDate1.format('DD/MM/YYYY');
+  }
+
+  /**
+   * Перегоняет дату из формата IJSONPoint в формат
+   * [ DD: number, MM: number, YYYY: number ]
+   * @param point - IJSONPoint
+   */
+  private processDate(point: IJSONPoint): number[] {
+    const mDate = moment(point.date, 'DD.MM.YYYY');
+    return [ +mDate.format('DD'), +mDate.format('MM'), +mDate.format('YYYY') ];
+  }
+
+  /**
+   * Получает массив в формате IJSONPoint[],
+   * отдаёт их формате ITimeline.
+   */
+  public processRates(data: IJSONPoint[] | {error: string}): Observable<ITimeline> {
+    if ('error' in data) {
+      return throwError('Something went wrong: ' + data.error);
+    }
+
+    const len = data.length;
+    const timeline: ITimeline = {};
+    for (let i = 0; i < len; i++) {
+      const [day, month, year] = this.processDate(data[i]);
+      if (!timeline[year]) {
+        timeline[year] = {};
+        if (!timeline.length) {
+          timeline.length = 1;
+        } else {
+          timeline.length += 1;
+        }
+      }
+      if (!timeline[year][month]) {
+        timeline[year][month] = {};
+        if (!timeline[year].length) {
+          timeline[year].length = 1;
+        } else {
+          timeline[year].length += 1;
+        }
+      }
+      timeline[year][month][day] = {
+        value: data[i].value,
+        number: day,
+        date: new Date(year, month, day)
+      };
+      if (!timeline[year][month].length) {
+        timeline[year][month].length = 1;
+      } else {
+        timeline[year][month].length += 1;
+      }
+    }
+    return of(timeline);
   }
 
 }

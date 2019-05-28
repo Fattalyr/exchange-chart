@@ -5,6 +5,7 @@ import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { RatesModule } from './rates';
 import { RangeModule } from './range';
+import { TimelineModule } from './timeline';
 
 @NgModule({
   declarations: [],
@@ -12,6 +13,7 @@ import { RangeModule } from './range';
     CommonModule,
     RatesModule,
     RangeModule,
+    TimelineModule,
     StoreModule.forRoot({}),
     StoreDevtoolsModule.instrument({
       maxAge: 25

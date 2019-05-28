@@ -5,6 +5,7 @@ import { Observable, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { RatesService } from 'src/app/services/rates.service';
 import * as ratesActions from './actions';
+import * as timelineActions from '../timeline/actions';
 
 @Injectable()
 export class RatesEffects {
@@ -18,6 +19,13 @@ export class RatesEffects {
       .pipe(
         map(rates => new ratesActions.LoadSuccessAction(rates)),
         catchError(error => of(new ratesActions.LoadFailureAction({ error })))
+      )
+    ),
+    switchMap(action => this.ratesService
+      .processRates(action.payload)
+      .pipe(
+        map(rates => new timelineActions.ProcessDataAction(rates)),
+        catchError(error => of(new timelineActions.ProcessErrorAction({ error })))
       )
     )
   );
