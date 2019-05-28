@@ -6,10 +6,9 @@ import {
   ChangeDetectionStrategy,
   Input
 } from '@angular/core';
-import { IJSONPoint } from 'src/app/interfaces/xml.interface';
 import { CanvasLayer } from 'src/app/models/canvas-layer.class';
 import * as moment from 'moment';
-import { ITimeline } from '../../../interfaces/timeline.interface';
+import { ITimeline } from 'src/app/interfaces/timeline.interface';
 
 @Component({
   selector: 'app-chart',
@@ -18,16 +17,16 @@ import { ITimeline } from '../../../interfaces/timeline.interface';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ChartComponent implements OnInit {
-  _rates: IJSONPoint[];
-  @Input('rates')
-  set rates(val: IJSONPoint[]) {
-    this._rates = val;
+  _timeline: ITimeline;
+  @Input('timeline')
+  set timeline(val: ITimeline) {
+    this._timeline = val;
     if (this.initialized) {
-      this.initChartRedraw();
+      this.chartRedraw();
     }
   }
-  get rates(): IJSONPoint[] {
-    return this._rates;
+  get timeline(): ITimeline {
+    return this._timeline;
   }
 
   chartCanvas: CanvasLayer = new CanvasLayer({idSelector: 'chart'});
@@ -38,45 +37,248 @@ export class ChartComponent implements OnInit {
 
   constructor() {}
 
-  initChartRedraw() {
-    const len = this.rates.length;
+  chartRedraw() {
+    if (!this.timeline.length) {
+      return;
+    }
     const ctx = this.chartCanvas.domElement.getContext('2d');
-    this.calculateYears();
-    this.calculateMonths();
+    ctx.clearRect(0, 0, this.chartCanvas.width, this.chartCanvas.height);
+    const realCanvasWidth = this.chartCanvas.width - this.chartCanvas.right - this.chartCanvas.left;
+    const realCanvasHeight = this.chartCanvas.height - this.chartCanvas.top - this.chartCanvas.bottom;
+    const CanvasYAxisZero = this.chartCanvas.top + realCanvasHeight;
+    const CanvasYAxisMax = this.chartCanvas.top;
+    let totalDays = 0; // дней на оси X
+    let totalMonths = 0; // месяцев всего на оси X
+    const totalYears = this.timeline.length;
+    this.chartCanvas.minY = Infinity;
+    this.chartCanvas.maxY = -Infinity;
+
+    for (const year in this.timeline) {
+      if (year === 'length') {
+        continue;
+      }
+      totalMonths += +this.timeline[year].length;
+      for (const month in this.timeline[year]) {
+        if (month === 'length') {
+          continue;
+        }
+        totalDays += +this.timeline[year][month].length;
+        for (const day in this.timeline[year][month]) {
+          if (day === 'length') {
+            continue;
+          }
+          const rate = this.timeline[year][month][day].value;
+          if (rate > this.chartCanvas.maxY) {
+            this.chartCanvas.maxY = rate;
+          }
+          if (rate < this.chartCanvas.minY) {
+            this.chartCanvas.minY = rate;
+          }
+        }
+      }
+    }
+
+    const axisXPart = Math.round((realCanvasWidth / totalDays) * 1000) / 1000;
+    console.log('Пикселей в делении: ', axisXPart);
+
+    console.log('Лет', totalYears);
+    console.log('Месяцев', totalMonths);
+    console.log('Дней', totalDays);
+
+    this.drawLines(ctx, CanvasYAxisZero, CanvasYAxisMax, realCanvasWidth, realCanvasHeight);
+    this.drawLabels(ctx, CanvasYAxisZero, CanvasYAxisMax, realCanvasWidth, realCanvasHeight, axisXPart);
+
   }
 
   /**
-   * Рассчитываем количество лет, заполняем
-   * ими массив в объекте this.chartCanvas.
+   * Рисует горизонтальные линии графика.
+   * @param ctx - контекст.
+   * @param CanvasYAxisZero - координата Y "нуля", т.е. откуда начинаем рисовать по высоте.
+   * @param realCanvasWidth - реальная ширина холста, с вычетом отступов.
+   * @param realCanvasHeight - реальная высота холста, с вычетом отступов.
+   * @param CanvasYAxisMax - максимально высокая координата по Y.
    */
-  calculateYears(): void {
-    if (!this.rates[0]) {
-      return;
-    }
-    const len = this.rates.length;
-    const firstYear = +moment(this.rates[0].date, 'DD.MM.YYYY').format('YYYY');
-    const lastYear = +moment(this.rates[len - 1].date, 'DD.MM.YYYY').format('YYYY');
-    const diff = lastYear - firstYear;
-    for (let i = 0; i <= diff; i++ ) {
-      this.chartCanvas.axisXYears.push(firstYear + i);
-    }
-    console.log(this.chartCanvas.axisXYears);
+  // tslint:disable-next-line:max-line-length
+  drawLines(ctx: CanvasRenderingContext2D, CanvasYAxisZero: number, CanvasYAxisMax: number, realCanvasWidth: number, realCanvasHeight: number) {
+    let linYVal; // Значение шкалы линии коридора по оси Y.
+    let linY; // Линия коридора, значение будет меняться в ходе работы.
+    // Ось X
+    ctx.beginPath();
+    ctx.moveTo(this.chartCanvas.left, CanvasYAxisZero);
+    ctx.lineTo(this.chartCanvas.left + realCanvasWidth, CanvasYAxisZero);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#E5E7E9';
+    ctx.lineCap = 'square';
+    ctx.stroke();
+
+    // Верхняя линия коридора
+    ctx.beginPath();
+    ctx.moveTo(this.chartCanvas.left, CanvasYAxisMax);
+    ctx.lineTo(this.chartCanvas.left + realCanvasWidth, CanvasYAxisMax);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#E5E7E9';
+    ctx.lineCap = 'square';
+    ctx.stroke();
+
+    // Линия нижней трети
+    ctx.beginPath();
+    linYVal = Math.floor((this.chartCanvas.minY + (this.chartCanvas.maxY - this.chartCanvas.minY) * 0.3333) * 10) / 10;
+    linY = this.chartCanvas.top + (Math.floor(realCanvasHeight * 0.6667 * 100) / 100);
+    ctx.moveTo(this.chartCanvas.left, linY);
+    ctx.lineTo(this.chartCanvas.left + realCanvasWidth, linY);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#E5E7E9';
+    ctx.lineCap = 'square';
+    ctx.stroke();
+
+    ctx.font = 'normal 12px Calibri';
+    ctx.fillStyle = '#99a0a8';
+    ctx.fillText(linYVal + '', this.chartCanvas.left - 26, linY + 3);
+
+    // Линия верхней трети
+    ctx.beginPath();
+    linYVal = Math.floor((this.chartCanvas.minY + (this.chartCanvas.maxY - this.chartCanvas.minY) * 0.6667) * 10) / 10;
+    linY = this.chartCanvas.top + (Math.floor(realCanvasHeight * 0.3333 * 100) / 100);
+    ctx.moveTo(this.chartCanvas.left, linY);
+    ctx.lineTo(this.chartCanvas.left + realCanvasWidth, linY);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#E5E7E9';
+    ctx.lineCap = 'square';
+    ctx.stroke();
+
+    ctx.font = 'normal 12px Calibri';
+    ctx.fillStyle = '#99a0a8';
+    ctx.fillText(linYVal + '', this.chartCanvas.left - 26, linY + 3);
+
+    ctx.font = 'normal 12px Calibri';
+    ctx.fillStyle = '#99a0a8';
+    ctx.fillText(Math.floor(this.chartCanvas.maxY * 100) / 100 + '', this.chartCanvas.left - 32, this.chartCanvas.top + 3);
+    // tslint:disable-next-line:max-line-length
+    ctx.fillText(Math.floor(this.chartCanvas.minY * 100) / 100 + '', this.chartCanvas.left - 32, this.chartCanvas.top + realCanvasHeight + 3);
   }
 
   /**
-   * Рассчитываем количество месяцев, заполняем
-   * ими массив в объекте this.chartCanvas.
+   * Рисует подписи лет и месяцев.
+   * @param ctx - контекст.
+   * @param CanvasYAxisZero - координата Y "нуля", т.е. откуда начинаем рисовать по высоте.
+   * @param realCanvasWidth - реальная ширина холста, с вычетом отступов.
+   * @param realCanvasHeight - реальная высота холста, с вычетом отступов.
+   * @param CanvasYAxisMax - максимально высокая координата по Y.
+   * @param axisXPart - пикселей в одном дне на графике.
    */
-  calculateMonths(): void {
-    if (!this.rates[0]) {
-      return;
+  // tslint:disable-next-line:max-line-length
+  drawLabels(ctx: CanvasRenderingContext2D, CanvasYAxisZero: number, CanvasYAxisMax: number, realCanvasWidth: number, realCanvasHeight: number, axisXPart: number) {
+    ctx.beginPath();
+    const tl = this.timeline;
+    let dayNumber = 0; // Номер дня от начала данных.
+    let currentOffset = this.chartCanvas.left; // Смещение по оси X, по мере того, как сменяются дни.
+    for (const year in tl) {
+      if (year === 'length') {
+        continue;
+      }
+      for (const month in tl[year]) {
+        if (month === 'length') {
+          continue;
+        }
+        for (const day in tl[year][month]) {
+          if (day === 'length') {
+            continue;
+          }
+          // Если начало года.
+          if (tl[year][month][day].yearStart) {
+            this.drawYearLabel(ctx, currentOffset, CanvasYAxisZero, year, month, axisXPart);
+          }
+          // Если начало месяца.
+          if (tl[year][month][day].monthStart) {
+            this.drawMonthLabel(ctx, currentOffset, CanvasYAxisZero, year, month, day, axisXPart);
+          }
+          dayNumber++;
+          currentOffset = this.chartCanvas.left + dayNumber * axisXPart;
+        }
+      }
     }
+  }
 
+  /**
+   * Устанавливает стиль надписей по умолчанию.
+   * @param ctx - контекст.
+   */
+  defaultCanvasText(ctx: CanvasRenderingContext2D) {
+    ctx.beginPath();
+    ctx.font = 'normal 12px Calibri';
+    ctx.fillStyle = '#99a0a8';
+    ctx.textAlign = 'left';
+  }
+
+  /**
+   * Рисует метку года.
+   * @param ctx - контекст.
+   * @param currentOffset - текущее смещение по оси X.
+   * @param CanvasYAxisZero - координаты нуля по оси Y.
+   * @param year - отрисовываемый год.
+   * @param month - чтобы проверить, если год начинается с декабря.
+   * @param axisXPart - сколько пикселей в "дне" по оси X.
+   */
+  // tslint:disable-next-line:max-line-length
+  drawYearLabel(ctx: CanvasRenderingContext2D, currentOffset: number, CanvasYAxisZero: number, year: string, month: string, axisXPart: number) {
+    ctx.beginPath();
+    ctx.moveTo(currentOffset, CanvasYAxisZero);
+    ctx.lineTo(currentOffset, CanvasYAxisZero + 30);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#E5E7E9';
+    ctx.lineCap = 'square';
+    ctx.stroke();
+    this.defaultCanvasText(ctx);
+    const monthLength = axisXPart * this.timeline[year][month].length; // Сколько пикселей приходится на декабрь.
+    if (month !== '11') {
+      ctx.fillText(year + ' →', currentOffset + 12, CanvasYAxisZero + 28);
+    } else {
+      if (monthLength >= 26) {
+        ctx.fillText('\'' + year.substr(-2), currentOffset + 8, CanvasYAxisZero + 28);
+      }
+    }
+  }
+
+  /**
+   * Отрисовывает название месяца.
+   * @param ctx - контекст.
+   * @param currentOffset - текущее смещение по оси X.
+   * @param CanvasYAxisZero - координаты нуля по оси Y.
+   * @param year - год.
+   * @param month - месяц.
+   * @param day - день.
+   * @param axisXPart - сколько пикселей в "дне" по оси X.
+   */
+  // tslint:disable-next-line:max-line-length
+  drawMonthLabel(ctx: CanvasRenderingContext2D, currentOffset: number, CanvasYAxisZero: number, year: number | string, month: number | string, day: number | string, axisXPart: number) {
+    ctx.beginPath();
+    this.defaultCanvasText(ctx);
+    let monthName: string;
+    const wordLength = axisXPart * this.timeline[year][month].length;
+    if (wordLength > 40) {
+      monthName = new Date(+year, +month, +day).toLocaleString('ru', {
+        month: 'long'
+      });
+      this.defaultCanvasText(ctx);
+      ctx.fillText(monthName, currentOffset + 12, CanvasYAxisZero + 14);
+    } else if (wordLength > 25 && wordLength <= 40) {
+      monthName = new Date(+year, +month, +day).toLocaleString('ru', {
+        month: 'short'
+      });
+      this.defaultCanvasText(ctx);
+      ctx.fillText(monthName, currentOffset + 8, CanvasYAxisZero + 14);
+    } else if (wordLength > 14 && wordLength <= 25) {
+      monthName = new Date(+year, +month, +day).toLocaleString('ru', {
+        month: 'narrow'
+      }).toLowerCase();
+      this.defaultCanvasText(ctx);
+      ctx.fillText(monthName, currentOffset + 4, CanvasYAxisZero + 14);
+    }
   }
 
   ngOnInit() {
     this.chartCanvas.domElement = this.chart.nativeElement as HTMLCanvasElement;
     this.initialized = true;
-    this.initChartRedraw();
+    this.chartRedraw();
   }
 }

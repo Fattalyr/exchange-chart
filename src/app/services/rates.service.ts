@@ -113,8 +113,11 @@ export class RatesService {
 
     const len = data.length;
     const timeline: ITimeline = {};
+    let prevMonth;
+    let prevYear;
     for (let i = 0; i < len; i++) {
       const [day, month, year] = this.processDate(data[i]);
+      const jsDateMonth = month - 1;
       if (!timeline[year]) {
         timeline[year] = {};
         if (!timeline.length) {
@@ -123,24 +126,28 @@ export class RatesService {
           timeline.length += 1;
         }
       }
-      if (!timeline[year][month]) {
-        timeline[year][month] = {};
+      if (!timeline[year][jsDateMonth]) {
+        timeline[year][jsDateMonth] = {};
         if (!timeline[year].length) {
           timeline[year].length = 1;
         } else {
           timeline[year].length += 1;
         }
       }
-      timeline[year][month][day] = {
-        value: data[i].value,
+      timeline[year][jsDateMonth][day] = {
+        value: parseFloat((data[i].value + '').replace(',', '.')),
         number: day,
-        date: new Date(year, month, day)
+        date: new Date(year, jsDateMonth, day)
       };
-      if (!timeline[year][month].length) {
-        timeline[year][month].length = 1;
+      if (!timeline[year][jsDateMonth].length) {
+        timeline[year][jsDateMonth].length = 1;
       } else {
-        timeline[year][month].length += 1;
+        timeline[year][jsDateMonth].length += 1;
       }
+      timeline[year][jsDateMonth][day].yearStart = year !== prevYear;
+      prevYear = year;
+      timeline[year][jsDateMonth][day].monthStart = month !== prevMonth;
+      prevMonth = month;
     }
     return of(timeline);
   }

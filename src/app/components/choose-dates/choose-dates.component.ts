@@ -69,7 +69,7 @@ export class ChooseDatesComponent implements OnInit {
   }
 
   picker2Filter = (d: Date): boolean => {
-    const startDate = moment(this.startDate.value).add(1, 'd');;
+    const startDate = moment(this.startDate.value).add(1, 'd');
     const checkingDate = moment(d);
     const minimumDate = moment('11-04-1997', 'MM-DD-YYYY').add(1, 'd');
     const today = moment();

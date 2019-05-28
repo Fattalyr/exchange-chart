@@ -6,11 +6,10 @@ import {
   ChangeDetectorRef
 } from '@angular/core';
 import { Store, select } from '@ngrx/store';
-import { StoreState, RangeActions, StoreSelectors } from '../../store';
-import { IJSONPoint } from 'src/app/interfaces/xml.interface';
-import { Observable, Subscription, of } from 'rxjs';
+import { StoreState, StoreSelectors } from 'src/app/store';
+import { Subscription } from 'rxjs';
 import * as moment from 'moment';
-import { RatesActions } from '../../store/rates';
+import { ITimeline } from '../../interfaces/timeline.interface';
 
 @Component({
   selector: 'app-canvas',
@@ -19,7 +18,7 @@ import { RatesActions } from '../../store/rates';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CanvasComponent implements OnInit, OnDestroy {
-  rates: IJSONPoint[];
+  timeline: ITimeline;
   ratesSubscription: Subscription;
 
   constructor(
@@ -29,11 +28,10 @@ export class CanvasComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.ratesSubscription = this.store.pipe(select(
-      StoreSelectors.selectAllRates
-    )).subscribe((rates) => {
-      this.rates = [...rates];
+      StoreSelectors.selectTimeline
+    )).subscribe((timeline) => {
+      this.timeline = {...timeline};
       this.changeDetector.detectChanges();
-      // console.log(this.rates);
     });
   }
 

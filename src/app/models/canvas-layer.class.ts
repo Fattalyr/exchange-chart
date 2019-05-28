@@ -24,7 +24,7 @@ export class CanvasLayer {
                 top = 30,
                 right = 30,
                 bottom = 30,
-                left = 30,
+                left = 40,
                 minY = -1,
                 maxY = -1,
                 axisXYears = [],

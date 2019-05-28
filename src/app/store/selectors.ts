@@ -1,6 +1,8 @@
 import { createSelector, MemoizedSelector } from '@ngrx/store';
 import { IJSONPoint } from 'src/app/interfaces/xml.interface';
+import { ITimeline } from 'src/app/interfaces/timeline.interface';
 import { RatesSelectors } from './rates';
+import { TimelineSelectors } from './timeline';
 
 export const selectRatesError = createSelector(
   RatesSelectors.selectRatesError,
@@ -20,5 +22,19 @@ export const selectAllRates = createSelector(
   RatesSelectors.selectAllRates,
   (rates: IJSONPoint[]) => {
     return rates;
+  }
+);
+
+export const selectTimeline = createSelector(
+  TimelineSelectors.selectTimeline,
+  (data: ITimeline) => {
+    return data;
+  }
+);
+
+export const selectTimelineError = createSelector(
+  TimelineSelectors.selectTimelineError,
+  (error: string | null) => {
+    return error;
   }
 );
