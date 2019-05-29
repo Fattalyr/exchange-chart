@@ -2,12 +2,18 @@ import { Action } from '@ngrx/store';
 import { ITimeline } from '../../interfaces/timeline.interface';
 
 export enum ActionTypes {
-  PROCESS_DATA = '[TIMELINE] Process Data',
+  PROCESS_START = '[TIMELINE] Process Start',
+  PROCESS_SUCCESS = '[TIMELINE] Process Success',
   PROCESS_ERROR = '[TIMELINE] Error'
 }
 
-export class ProcessDataAction implements Action {
-  readonly type = ActionTypes.PROCESS_DATA;
+export class ProcessStartAction implements Action {
+  readonly type = ActionTypes.PROCESS_START;
+  constructor() {}
+}
+
+export class ProcessSuccessAction implements Action {
+  readonly type = ActionTypes.PROCESS_SUCCESS;
   constructor(public payload: ITimeline) {}
 }
 
@@ -16,5 +22,5 @@ export class ProcessErrorAction implements Action {
   constructor(public payload: {error: string | null}) {}
 }
 
-export type Actions = ProcessDataAction | ProcessErrorAction;
+export type Actions = ProcessStartAction | ProcessSuccessAction | ProcessErrorAction;
 

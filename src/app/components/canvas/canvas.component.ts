@@ -20,6 +20,9 @@ import { ITimeline } from '../../interfaces/timeline.interface';
 export class CanvasComponent implements OnInit, OnDestroy {
   timeline: ITimeline;
   ratesSubscription: Subscription;
+  ratesAreLoading = this.store.pipe(select(
+    StoreSelectors.selectRatesAreLoading
+  ));
 
   constructor(
     private store: Store<StoreState.State>,

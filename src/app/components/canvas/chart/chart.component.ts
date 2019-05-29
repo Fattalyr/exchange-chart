@@ -7,7 +7,6 @@ import {
   Input
 } from '@angular/core';
 import { CanvasLayer } from 'src/app/models/canvas-layer.class';
-import * as moment from 'moment';
 import { ITimeline } from 'src/app/interfaces/timeline.interface';
 
 @Component({
@@ -28,6 +27,9 @@ export class ChartComponent implements OnInit {
   get timeline(): ITimeline {
     return this._timeline;
   }
+
+  offsetY = 0.05; // Отступ, умножается на спред между максимальным
+                  // и минимальным значениями графика.
 
   chartCanvas: CanvasLayer = new CanvasLayer({idSelector: 'chart'});
 
@@ -75,22 +77,24 @@ export class ChartComponent implements OnInit {
           }
         }
       }
-      // Отступ 10% сверху и снизу.
-      const diffOffset10 = (this.chartCanvas.maxY - this.chartCanvas.minY) * 0.1;
-      this.chartCanvas.maxY = Math.round((this.chartCanvas.maxY + diffOffset10) * 100) / 100;
-      this.chartCanvas.minY = Math.round((this.chartCanvas.minY - diffOffset10) * 100) / 100;
+
+      const diffOffset = (this.chartCanvas.maxY - this.chartCanvas.minY) * this.offsetY;
+      this.chartCanvas.maxY = Math.round((this.chartCanvas.maxY + diffOffset) * 100) / 100;
+      this.chartCanvas.minY = Math.max(Math.round((this.chartCanvas.minY - diffOffset) * 100) / 100, 0);
     }
 
-    const axisXPart = Math.round((realCanvasWidth / totalDays) * 1000) / 1000;
+    const axisXPart = realCanvasWidth / totalDays;
     // console.log('Пикселей в делении: ', axisXPart);
     // console.log('Лет', totalYears);
     // console.log('Месяцев', totalMonths);
     // console.log('Дней', totalDays);
-
+    // tslint:disable-next-line:no-console
+    // console.time('timeOfRedraw');
     this.drawLines(ctx, CanvasYAxisZero, CanvasYAxisMax, realCanvasWidth, realCanvasHeight);
     this.drawLabels(ctx, CanvasYAxisZero, CanvasYAxisMax, realCanvasWidth, realCanvasHeight, axisXPart);
     this.drawCurve(ctx, CanvasYAxisZero, CanvasYAxisMax, axisXPart);
-
+    // tslint:disable-next-line:no-console
+    // console.timeEnd('timeOfRedraw');
   }
 
   /**
@@ -223,7 +227,6 @@ export class ChartComponent implements OnInit {
     ctx.lineWidth = 2;
     ctx.strokeStyle = '#74A3C7';
     ctx.lineCap = 'round';
-    ctx.stroke();
   }
 
   /**
@@ -293,6 +296,8 @@ export class ChartComponent implements OnInit {
   }
 
   drawCurve(ctx: CanvasRenderingContext2D, CanvasYAxisZero: number, CanvasYAxisMax: number, axisXPart: number) {
+    // tslint:disable-next-line:no-console
+    console.time('timeOfRedraw');
     ctx.beginPath();
     this.defaultCurveLineStyle(ctx);
     const tl = this.timeline;
@@ -302,6 +307,7 @@ export class ChartComponent implements OnInit {
     const minYVal = this.chartCanvas.minY;
     const diff = maxYVal - minYVal;
     const axisYPart = (CanvasYAxisZero - CanvasYAxisMax) / (maxYVal - minYVal);
+    let i = 0;
 
     for (const year in tl) {
       if (year === 'length') {
@@ -317,18 +323,19 @@ export class ChartComponent implements OnInit {
           }
           if (prevY === 0) {
             prevY = this.chartCanvas.top + (diff - (tl[year][month][day].value - minYVal)) * axisYPart;
-            prevX += axisXPart;
             continue;
           }
-          this.defaultCurveLineStyle(ctx);
           const Y = Math.round(this.chartCanvas.top + (diff - (tl[year][month][day].value - minYVal)) * axisYPart);
           ctx.moveTo(prevX, prevY);
           ctx.lineTo(prevX + axisXPart, Y);
-          prevX = Math.round(prevX + axisXPart);
+          prevX = prevX + axisXPart;
           prevY = Y;
         }
       }
     }
+    ctx.stroke();
+    // tslint:disable-next-line:no-console
+    console.timeEnd('timeOfRedraw');
   }
 
   ngOnInit() {

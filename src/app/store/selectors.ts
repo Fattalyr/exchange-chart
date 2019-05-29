@@ -25,6 +25,13 @@ export const selectAllRates = createSelector(
   }
 );
 
+export const selectTimelineIsLoading = createSelector(
+  TimelineSelectors.selectTimelineIsLoading,
+  (loading: boolean) => {
+    return loading;
+  }
+);
+
 export const selectTimeline = createSelector(
   TimelineSelectors.selectTimeline,
   (data: ITimeline) => {

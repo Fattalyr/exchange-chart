@@ -7,6 +7,9 @@ export const selectState: MemoizedSelector<
   ITimelineState
   > = createFeatureSelector<ITimelineState>('timeline');
 
+export const getLoading = (state: ITimelineState): boolean => state.isLoading;
+export const selectTimelineIsLoading = createSelector(selectState, getLoading);
+
 export const getTimeline = (state: ITimelineState): ITimeline => state.data;
 export const selectTimeline = createSelector(selectState, getTimeline);
 
