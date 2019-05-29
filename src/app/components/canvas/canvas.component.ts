@@ -8,8 +8,8 @@ import {
 import { Store, select } from '@ngrx/store';
 import { StoreState, StoreSelectors } from 'src/app/store';
 import { Subscription } from 'rxjs';
-import * as moment from 'moment';
-import { ITimeline } from '../../interfaces/timeline.interface';
+import { ITimeline } from 'src/app/interfaces/timeline.interface';
+import { IJSONPoint } from 'src/app/interfaces/xml.interface';
 
 @Component({
   selector: 'app-canvas',
@@ -19,6 +19,8 @@ import { ITimeline } from '../../interfaces/timeline.interface';
 })
 export class CanvasComponent implements OnInit, OnDestroy {
   timeline: ITimeline;
+  rates: IJSONPoint[];
+  timelineSubscription: Subscription;
   ratesSubscription: Subscription;
   ratesAreLoading = this.store.pipe(select(
     StoreSelectors.selectRatesAreLoading
@@ -30,15 +32,22 @@ export class CanvasComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    this.ratesSubscription = this.store.pipe(select(
+    this.timelineSubscription = this.store.pipe(select(
       StoreSelectors.selectTimeline
     )).subscribe((timeline) => {
       this.timeline = {...timeline};
       this.changeDetector.detectChanges();
     });
+
+    this.ratesSubscription = this.store.pipe(select(
+      StoreSelectors.selectAllRates
+    )).subscribe((rates) => {
+      this.rates = rates;
+      this.changeDetector.detectChanges();
+    });
   }
 
   ngOnDestroy() {
-    this.ratesSubscription.unsubscribe();
+    this.timelineSubscription.unsubscribe();
   }
 }

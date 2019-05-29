@@ -1,4 +1,7 @@
 <div class="canvas-outer">
-  {{ratesAreLoading | async}}
+  <div *ngIf="ratesAreLoading | async" class="spinner-block">
+    <mat-spinner></mat-spinner>
+  </div>
   <app-chart [timeline]="timeline"></app-chart>
+  <app-pointer [rates]="rates"></app-pointer>
 </div>
