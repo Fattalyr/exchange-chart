@@ -49,7 +49,6 @@ export class ChartComponent implements OnInit {
     const CanvasYAxisMax = this.chartCanvas.top;
     let totalDays = 0; // дней на оси X
     let totalMonths = 0; // месяцев всего на оси X
-    const totalYears = this.timeline.length;
     this.chartCanvas.minY = Infinity;
     this.chartCanvas.maxY = -Infinity;
 
@@ -76,17 +75,21 @@ export class ChartComponent implements OnInit {
           }
         }
       }
+      // Отступ 10% сверху и снизу.
+      const diffOffset10 = (this.chartCanvas.maxY - this.chartCanvas.minY) * 0.1;
+      this.chartCanvas.maxY = Math.round((this.chartCanvas.maxY + diffOffset10) * 100) / 100;
+      this.chartCanvas.minY = Math.round((this.chartCanvas.minY - diffOffset10) * 100) / 100;
     }
 
     const axisXPart = Math.round((realCanvasWidth / totalDays) * 1000) / 1000;
-    console.log('Пикселей в делении: ', axisXPart);
-
-    console.log('Лет', totalYears);
-    console.log('Месяцев', totalMonths);
-    console.log('Дней', totalDays);
+    // console.log('Пикселей в делении: ', axisXPart);
+    // console.log('Лет', totalYears);
+    // console.log('Месяцев', totalMonths);
+    // console.log('Дней', totalDays);
 
     this.drawLines(ctx, CanvasYAxisZero, CanvasYAxisMax, realCanvasWidth, realCanvasHeight);
     this.drawLabels(ctx, CanvasYAxisZero, CanvasYAxisMax, realCanvasWidth, realCanvasHeight, axisXPart);
+    this.drawCurve(ctx, CanvasYAxisZero, CanvasYAxisMax, axisXPart);
 
   }
 
@@ -102,10 +105,12 @@ export class ChartComponent implements OnInit {
   drawLines(ctx: CanvasRenderingContext2D, CanvasYAxisZero: number, CanvasYAxisMax: number, realCanvasWidth: number, realCanvasHeight: number) {
     let linYVal; // Значение шкалы линии коридора по оси Y.
     let linY; // Линия коридора, значение будет меняться в ходе работы.
+    const leftTextOffset = 32; // Смещение текста подписей линий влево.
+
     // Ось X
     ctx.beginPath();
-    ctx.moveTo(this.chartCanvas.left, CanvasYAxisZero);
-    ctx.lineTo(this.chartCanvas.left + realCanvasWidth, CanvasYAxisZero);
+    ctx.moveTo(this.chartCanvas.left, Math.round(CanvasYAxisZero));
+    ctx.lineTo(this.chartCanvas.left + realCanvasWidth, Math.round(CanvasYAxisZero));
     ctx.lineWidth = 1;
     ctx.strokeStyle = '#E5E7E9';
     ctx.lineCap = 'square';
@@ -113,8 +118,8 @@ export class ChartComponent implements OnInit {
 
     // Верхняя линия коридора
     ctx.beginPath();
-    ctx.moveTo(this.chartCanvas.left, CanvasYAxisMax);
-    ctx.lineTo(this.chartCanvas.left + realCanvasWidth, CanvasYAxisMax);
+    ctx.moveTo(this.chartCanvas.left, Math.round(CanvasYAxisMax));
+    ctx.lineTo(this.chartCanvas.left + realCanvasWidth, Math.round(CanvasYAxisMax));
     ctx.lineWidth = 1;
     ctx.strokeStyle = '#E5E7E9';
     ctx.lineCap = 'square';
@@ -123,7 +128,7 @@ export class ChartComponent implements OnInit {
     // Линия нижней трети
     ctx.beginPath();
     linYVal = Math.floor((this.chartCanvas.minY + (this.chartCanvas.maxY - this.chartCanvas.minY) * 0.3333) * 10) / 10;
-    linY = this.chartCanvas.top + (Math.floor(realCanvasHeight * 0.6667 * 100) / 100);
+    linY = Math.round(this.chartCanvas.top + (realCanvasHeight * 0.6667));
     ctx.moveTo(this.chartCanvas.left, linY);
     ctx.lineTo(this.chartCanvas.left + realCanvasWidth, linY);
     ctx.lineWidth = 1;
@@ -133,12 +138,12 @@ export class ChartComponent implements OnInit {
 
     ctx.font = 'normal 12px Calibri';
     ctx.fillStyle = '#99a0a8';
-    ctx.fillText(linYVal + '', this.chartCanvas.left - 26, linY + 3);
+    ctx.fillText(linYVal + '', this.chartCanvas.left - leftTextOffset, linY + 3);
 
     // Линия верхней трети
     ctx.beginPath();
     linYVal = Math.floor((this.chartCanvas.minY + (this.chartCanvas.maxY - this.chartCanvas.minY) * 0.6667) * 10) / 10;
-    linY = this.chartCanvas.top + (Math.floor(realCanvasHeight * 0.3333 * 100) / 100);
+    linY = Math.round(this.chartCanvas.top + (realCanvasHeight * 0.3333));
     ctx.moveTo(this.chartCanvas.left, linY);
     ctx.lineTo(this.chartCanvas.left + realCanvasWidth, linY);
     ctx.lineWidth = 1;
@@ -148,13 +153,13 @@ export class ChartComponent implements OnInit {
 
     ctx.font = 'normal 12px Calibri';
     ctx.fillStyle = '#99a0a8';
-    ctx.fillText(linYVal + '', this.chartCanvas.left - 26, linY + 3);
+    ctx.fillText(linYVal + '', this.chartCanvas.left - leftTextOffset, linY + 3);
 
     ctx.font = 'normal 12px Calibri';
     ctx.fillStyle = '#99a0a8';
-    ctx.fillText(Math.floor(this.chartCanvas.maxY * 100) / 100 + '', this.chartCanvas.left - 32, this.chartCanvas.top + 3);
+    ctx.fillText(Math.floor(this.chartCanvas.maxY * 10) / 10 + '', this.chartCanvas.left - leftTextOffset, this.chartCanvas.top + 3);
     // tslint:disable-next-line:max-line-length
-    ctx.fillText(Math.floor(this.chartCanvas.minY * 100) / 100 + '', this.chartCanvas.left - 32, this.chartCanvas.top + realCanvasHeight + 3);
+    ctx.fillText(Math.floor(this.chartCanvas.minY * 10) / 10 + '', this.chartCanvas.left - leftTextOffset, this.chartCanvas.top + realCanvasHeight + 3);
   }
 
   /**
@@ -208,6 +213,17 @@ export class ChartComponent implements OnInit {
     ctx.font = 'normal 12px Calibri';
     ctx.fillStyle = '#99a0a8';
     ctx.textAlign = 'left';
+  }
+
+  /**
+   * Устанавливает стиль кривой по умолчанию.
+   * @param ctx - контекст.
+   */
+  defaultCurveLineStyle(ctx: CanvasRenderingContext2D) {
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#74A3C7';
+    ctx.lineCap = 'round';
+    ctx.stroke();
   }
 
   /**
@@ -273,6 +289,45 @@ export class ChartComponent implements OnInit {
       }).toLowerCase();
       this.defaultCanvasText(ctx);
       ctx.fillText(monthName, currentOffset + 4, CanvasYAxisZero + 14);
+    }
+  }
+
+  drawCurve(ctx: CanvasRenderingContext2D, CanvasYAxisZero: number, CanvasYAxisMax: number, axisXPart: number) {
+    ctx.beginPath();
+    this.defaultCurveLineStyle(ctx);
+    const tl = this.timeline;
+    let prevX = this.chartCanvas.left;
+    let prevY = 0;
+    const maxYVal = this.chartCanvas.maxY;
+    const minYVal = this.chartCanvas.minY;
+    const diff = maxYVal - minYVal;
+    const axisYPart = (CanvasYAxisZero - CanvasYAxisMax) / (maxYVal - minYVal);
+
+    for (const year in tl) {
+      if (year === 'length') {
+        continue;
+      }
+      for (const month in tl[year]) {
+        if (month === 'length') {
+          continue;
+        }
+        for (const day in tl[year][month]) {
+          if (day === 'length') {
+            continue;
+          }
+          if (prevY === 0) {
+            prevY = this.chartCanvas.top + (diff - (tl[year][month][day].value - minYVal)) * axisYPart;
+            prevX += axisXPart;
+            continue;
+          }
+          this.defaultCurveLineStyle(ctx);
+          const Y = Math.round(this.chartCanvas.top + (diff - (tl[year][month][day].value - minYVal)) * axisYPart);
+          ctx.moveTo(prevX, prevY);
+          ctx.lineTo(prevX + axisXPart, Y);
+          prevX = Math.round(prevX + axisXPart);
+          prevY = Y;
+        }
+      }
     }
   }
 

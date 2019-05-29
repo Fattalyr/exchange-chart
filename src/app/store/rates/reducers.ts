@@ -11,6 +11,7 @@ export function ratesReducer(state = initialState, action: Actions): IRatesState
       };
     }
     case ActionTypes.LOAD_SUCCESS: {
+      console.log('Load success reducer');
       return {
         ...state,
         rates: action.payload,
