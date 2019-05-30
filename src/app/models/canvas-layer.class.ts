@@ -17,6 +17,10 @@ export class CanvasLayer {
 
   domElement: HTMLCanvasElement | null;
 
+  offsetY: number; // Отступ от верхней и нижней границы
+                   // до коридора кривой графика, например 0.05 - это 5%
+                   // от высоты коридора.
+
   constructor({
                 idSelector,
                 width = 900,
@@ -30,7 +34,8 @@ export class CanvasLayer {
                 axisXYears = [],
                 axisXMonths = [],
                 axisXPart = 0,
-                domElement = null
+                domElement = null,
+                offsetY = 0.05
               }) {
     this.idSelector = idSelector;
     this.width = width;
@@ -45,5 +50,6 @@ export class CanvasLayer {
     this.axisXMonths = axisXMonths;
     this.axisXPart = axisXPart;
     this.domElement = domElement;
+    this.offsetY = offsetY;
   }
 }

@@ -6,6 +6,7 @@ import { NgxXml2jsonService } from 'ngx-xml2json';
 import { isDevMode } from '@angular/core';
 import { IXMLData, IJSONPoint } from '../interfaces/xml.interface';
 import { ITimeline } from '../interfaces/timeline.interface';
+import { SharedRatesDataService } from './shared-rates-data.service';
 import * as moment from 'moment';
 
 @Injectable({
@@ -18,7 +19,11 @@ export class RatesService {
   private endDate = '31/12/2018';
   private cbrURL = '';
 
-  constructor(private http: HttpClient, private xmlToJson: NgxXml2jsonService) {
+  constructor(
+    private http: HttpClient,
+    private xmlToJson: NgxXml2jsonService,
+    private sharedData: SharedRatesDataService
+  ) {
     const now = new Date();
     const thisYear = now.getFullYear();
     this.setEndsOfRange('01/01/' + thisYear.toString(), '31/12/' + thisYear.toString());
@@ -72,7 +77,11 @@ export class RatesService {
           const xml = parser.parseFromString(rates.toString(), 'text/xml');
           return this.xmlToJson.xmlToJson(xml);
         }),
-        map(rates => this.formatRates(rates)),
+        map(rates => {
+          const formattedRates = this.formatRates(rates);
+          this.defineMinMax(formattedRates);
+          return formattedRates;
+        }),
         catchError(status => throwError(status))
       );
   }
@@ -100,6 +109,19 @@ export class RatesService {
   private processDate(point: IJSONPoint): number[] {
     const mDate = moment(point.date, 'DD.MM.YYYY');
     return [ +mDate.format('DD'), +mDate.format('MM'), +mDate.format('YYYY') ];
+  }
+
+  private defineMinMax(data: IJSONPoint[]) {
+    const len = data.length;
+    let min = Infinity;
+    let max = -Infinity;
+    this.sharedData.setRatesLength(len);
+    for (let i = 0; i < len; i++) {
+      min = Math.min(min, parseFloat((data[i].value + '').replace(',', '.')));
+      max = Math.max(max, parseFloat((data[i].value + '').replace(',', '.')));
+    }
+    this.sharedData.setRatesMin(min);
+    this.sharedData.setRatesMax(max);
   }
 
   /**
@@ -134,8 +156,9 @@ export class RatesService {
           timeline[year].length += 1;
         }
       }
+      const value = parseFloat((data[i].value + '').replace(',', '.'));
       timeline[year][jsDateMonth][day] = {
-        value: parseFloat((data[i].value + '').replace(',', '.')),
+        value: value,
         number: day,
         date: new Date(year, jsDateMonth, day)
       };

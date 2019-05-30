@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { CanvasLayer } from 'src/app/models/canvas-layer.class';
 import { ITimeline } from 'src/app/interfaces/timeline.interface';
+import { SharedRatesDataService } from 'src/app/services/shared-rates-data.service';
 
 @Component({
   selector: 'app-chart',
@@ -28,16 +29,15 @@ export class ChartComponent implements OnInit {
     return this._timeline;
   }
 
-  offsetY = 0.05; // Отступ, умножается на спред между максимальным
-                  // и минимальным значениями графика.
-
   chartCanvas: CanvasLayer = new CanvasLayer({idSelector: 'chart'});
 
   initialized = false; // Индикатор, инициализирован ли компонент.
 
   @ViewChild('chart') chart: ElementRef;
 
-  constructor() {}
+  totalDays: number;
+
+  constructor(private sharedData: SharedRatesDataService) {}
 
   chartRedraw() {
     if (!this.timeline.length) {
@@ -49,52 +49,14 @@ export class ChartComponent implements OnInit {
     const realCanvasHeight = this.chartCanvas.height - this.chartCanvas.top - this.chartCanvas.bottom;
     const CanvasYAxisZero = this.chartCanvas.top + realCanvasHeight;
     const CanvasYAxisMax = this.chartCanvas.top;
-    let totalDays = 0; // дней на оси X
-    let totalMonths = 0; // месяцев всего на оси X
-    this.chartCanvas.minY = Infinity;
-    this.chartCanvas.maxY = -Infinity;
+    const diffOffset = (this.chartCanvas.maxY - this.chartCanvas.minY) * this.chartCanvas.offsetY;
+    const maxYVal = Math.round((this.chartCanvas.maxY + diffOffset) * 100) / 100;
+    const minYVal = Math.max(Math.round((this.chartCanvas.minY - diffOffset) * 100) / 100, 0);
+    const axisXPart = realCanvasWidth / (this.totalDays - 1);
 
-    for (const year in this.timeline) {
-      if (year === 'length') {
-        continue;
-      }
-      totalMonths += +this.timeline[year].length;
-      for (const month in this.timeline[year]) {
-        if (month === 'length') {
-          continue;
-        }
-        totalDays += +this.timeline[year][month].length;
-        for (const day in this.timeline[year][month]) {
-          if (day === 'length') {
-            continue;
-          }
-          const rate = this.timeline[year][month][day].value;
-          if (rate > this.chartCanvas.maxY) {
-            this.chartCanvas.maxY = rate;
-          }
-          if (rate < this.chartCanvas.minY) {
-            this.chartCanvas.minY = rate;
-          }
-        }
-      }
-
-      const diffOffset = (this.chartCanvas.maxY - this.chartCanvas.minY) * this.offsetY;
-      this.chartCanvas.maxY = Math.round((this.chartCanvas.maxY + diffOffset) * 100) / 100;
-      this.chartCanvas.minY = Math.max(Math.round((this.chartCanvas.minY - diffOffset) * 100) / 100, 0);
-    }
-
-    const axisXPart = realCanvasWidth / totalDays;
-    // console.log('Пикселей в делении: ', axisXPart);
-    // console.log('Лет', totalYears);
-    // console.log('Месяцев', totalMonths);
-    // console.log('Дней', totalDays);
-    // tslint:disable-next-line:no-console
-    // console.time('timeOfRedraw');
-    this.drawLines(ctx, CanvasYAxisZero, CanvasYAxisMax, realCanvasWidth, realCanvasHeight);
+    this.drawLines(ctx, CanvasYAxisZero, CanvasYAxisMax, realCanvasWidth, realCanvasHeight, maxYVal, minYVal);
     this.drawLabels(ctx, CanvasYAxisZero, CanvasYAxisMax, realCanvasWidth, realCanvasHeight, axisXPart);
-    this.drawCurve(ctx, CanvasYAxisZero, CanvasYAxisMax, axisXPart);
-    // tslint:disable-next-line:no-console
-    // console.timeEnd('timeOfRedraw');
+    this.drawCurve(ctx, CanvasYAxisZero, CanvasYAxisMax, axisXPart, maxYVal, minYVal);
   }
 
   /**
@@ -104,9 +66,11 @@ export class ChartComponent implements OnInit {
    * @param realCanvasWidth - реальная ширина холста, с вычетом отступов.
    * @param realCanvasHeight - реальная высота холста, с вычетом отступов.
    * @param CanvasYAxisMax - максимально высокая координата по Y.
+   * @param maxYVal - Верхний порог по шкале для графика.
+   * @param minYVal - Нижний порог по шкале для графика.
    */
   // tslint:disable-next-line:max-line-length
-  drawLines(ctx: CanvasRenderingContext2D, CanvasYAxisZero: number, CanvasYAxisMax: number, realCanvasWidth: number, realCanvasHeight: number) {
+  drawLines(ctx: CanvasRenderingContext2D, CanvasYAxisZero: number, CanvasYAxisMax: number, realCanvasWidth: number, realCanvasHeight: number, maxYVal: number, minYVal: number) {
     let linYVal; // Значение шкалы линии коридора по оси Y.
     let linY; // Линия коридора, значение будет меняться в ходе работы.
     const leftTextOffset = 32; // Смещение текста подписей линий влево.
@@ -131,7 +95,7 @@ export class ChartComponent implements OnInit {
 
     // Линия нижней трети
     ctx.beginPath();
-    linYVal = Math.floor((this.chartCanvas.minY + (this.chartCanvas.maxY - this.chartCanvas.minY) * 0.3333) * 10) / 10;
+    linYVal = Math.floor((minYVal + (maxYVal - minYVal) * 0.3333) * 10) / 10;
     linY = Math.round(this.chartCanvas.top + (realCanvasHeight * 0.6667));
     ctx.moveTo(this.chartCanvas.left, linY);
     ctx.lineTo(this.chartCanvas.left + realCanvasWidth, linY);
@@ -146,7 +110,7 @@ export class ChartComponent implements OnInit {
 
     // Линия верхней трети
     ctx.beginPath();
-    linYVal = Math.floor((this.chartCanvas.minY + (this.chartCanvas.maxY - this.chartCanvas.minY) * 0.6667) * 10) / 10;
+    linYVal = Math.floor((minYVal + (maxYVal - minYVal) * 0.6667) * 10) / 10;
     linY = Math.round(this.chartCanvas.top + (realCanvasHeight * 0.3333));
     ctx.moveTo(this.chartCanvas.left, linY);
     ctx.lineTo(this.chartCanvas.left + realCanvasWidth, linY);
@@ -161,9 +125,9 @@ export class ChartComponent implements OnInit {
 
     ctx.font = 'normal 12px Calibri';
     ctx.fillStyle = '#99a0a8';
-    ctx.fillText(Math.floor(this.chartCanvas.maxY * 10) / 10 + '', this.chartCanvas.left - leftTextOffset, this.chartCanvas.top + 3);
+    ctx.fillText(Math.floor(maxYVal * 10) / 10 + '', this.chartCanvas.left - leftTextOffset, this.chartCanvas.top + 3);
     // tslint:disable-next-line:max-line-length
-    ctx.fillText(Math.floor(this.chartCanvas.minY * 10) / 10 + '', this.chartCanvas.left - leftTextOffset, this.chartCanvas.top + realCanvasHeight + 3);
+    ctx.fillText(Math.floor(minYVal * 10) / 10 + '', this.chartCanvas.left - leftTextOffset, this.chartCanvas.top + realCanvasHeight + 3);
   }
 
   /**
@@ -295,7 +259,17 @@ export class ChartComponent implements OnInit {
     }
   }
 
-  drawCurve(ctx: CanvasRenderingContext2D, CanvasYAxisZero: number, CanvasYAxisMax: number, axisXPart: number) {
+  /**
+   * Рисует кривую графика.
+   * @param ctx - контекст.
+   * @param CanvasYAxisZero - координаты нуля по оси Y.
+   * @param CanvasYAxisMax - максимум по оси Y.
+   * @param axisXPart - сколько пикселей в одном "дне" по оси X.
+   * @param maxYVal - максимальное значение коридора.
+   * @param minYVal - минимальное значение коридора.
+   */
+  // tslint:disable-next-line:max-line-length
+  drawCurve(ctx: CanvasRenderingContext2D, CanvasYAxisZero: number, CanvasYAxisMax: number, axisXPart: number, maxYVal: number, minYVal: number) {
     // tslint:disable-next-line:no-console
     console.time('timeOfRedraw');
     ctx.beginPath();
@@ -303,11 +277,8 @@ export class ChartComponent implements OnInit {
     const tl = this.timeline;
     let prevX = this.chartCanvas.left;
     let prevY = 0;
-    const maxYVal = this.chartCanvas.maxY;
-    const minYVal = this.chartCanvas.minY;
     const diff = maxYVal - minYVal;
     const axisYPart = (CanvasYAxisZero - CanvasYAxisMax) / (maxYVal - minYVal);
-    let i = 0;
 
     for (const year in tl) {
       if (year === 'length') {
@@ -340,7 +311,9 @@ export class ChartComponent implements OnInit {
 
   ngOnInit() {
     this.chartCanvas.domElement = this.chart.nativeElement as HTMLCanvasElement;
+    this.sharedData.ratesLengthSource.subscribe(length => this.totalDays = length);
+    this.sharedData.ratesMinSource.subscribe(min => this.chartCanvas.minY = min);
+    this.sharedData.ratesMaxSource.subscribe(max => this.chartCanvas.maxY = max);
     this.initialized = true;
-    this.chartRedraw();
   }
 }
