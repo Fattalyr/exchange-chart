@@ -35,7 +35,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
     this.timelineSubscription = this.store.pipe(select(
       StoreSelectors.selectTimeline
     )).subscribe((timeline) => {
-      this.timeline = {...timeline};
+      this.timeline = timeline;
       this.changeDetector.detectChanges();
     });
 
@@ -49,5 +49,6 @@ export class CanvasComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.timelineSubscription.unsubscribe();
+    this.ratesSubscription.unsubscribe();
   }
 }

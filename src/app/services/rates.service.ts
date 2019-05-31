@@ -53,7 +53,7 @@ export class RatesService {
     const formattedRates = [];
     ratesArray.forEach(rate => formattedRates.push({
         date: rate['@attributes'].Date,
-        value: rate.Value
+        value: parseFloat(rate.Value.replace(',', '.'))
       })
     );
     return formattedRates;
@@ -156,7 +156,7 @@ export class RatesService {
           timeline[year].length += 1;
         }
       }
-      const value = parseFloat((data[i].value + '').replace(',', '.'));
+      const value = data[i].value;
       timeline[year][jsDateMonth][day] = {
         value: value,
         number: day,

@@ -21,5 +21,5 @@ export interface IXMLData {
 
 export interface IJSONPoint {
   date: string;
-  value: string;
+  value: number;
 }

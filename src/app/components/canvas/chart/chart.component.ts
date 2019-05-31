@@ -278,7 +278,7 @@ export class ChartComponent implements OnInit {
     let prevX = this.chartCanvas.left;
     let prevY = 0;
     const diff = maxYVal - minYVal;
-    const axisYPart = (CanvasYAxisZero - CanvasYAxisMax) / (maxYVal - minYVal);
+    const axisYPart = (CanvasYAxisZero - CanvasYAxisMax) / diff;
 
     for (const year in tl) {
       if (year === 'length') {

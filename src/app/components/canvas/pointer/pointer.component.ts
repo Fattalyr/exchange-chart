@@ -4,13 +4,11 @@ import {
   Input,
   ElementRef,
   ViewChild,
-  ChangeDetectionStrategy,
-  ChangeDetectorRef
+  ChangeDetectionStrategy
 } from '@angular/core';
-import { fromEvent } from 'rxjs';
-import { throttleTime } from 'rxjs/operators';
 import { CanvasLayer } from 'src/app/models/canvas-layer.class';
 import { IJSONPoint } from 'src/app/interfaces/xml.interface';
+import { PointDataService } from 'src/app/services/point-data.service';
 import { IPointerCanvasPixel } from 'src/app/interfaces/pointer-canvas.interface';
 import { SharedRatesDataService } from 'src/app/services/shared-rates-data.service';
 
@@ -41,31 +39,37 @@ export class PointerComponent implements OnInit {
 
   pixelMatrix: IPointerCanvasPixel = {};
 
-  constructor(private sharedData: SharedRatesDataService) {}
+  constructor(private sharedData: SharedRatesDataService, private pointData: PointDataService) {}
 
   ngOnInit() {
     this.initialized = true;
-
-    fromEvent(this.pointer.nativeElement, 'mousemove')
-      .pipe(throttleTime(20))
-      .subscribe(e => this.drawPointer(e as MouseEvent));
 
     this.pointerCanvas.domElement = this.pointer.nativeElement as HTMLCanvasElement;
 
     this.sharedData.ratesMinSource.subscribe(min => this.pointerCanvas.minY = min);
     this.sharedData.ratesMaxSource.subscribe(max => this.pointerCanvas.maxY = max);
+
+    this.pointData.eventSource.subscribe(e => this.drawPointer(e));
   }
 
   drawPointer(event: MouseEvent) {
+    if (!event) {
+      return;
+    }
     const ctx = this.pointerCanvas.domElement.getContext('2d');
     ctx.clearRect(0, 0, this.pointerCanvas.width, this.pointerCanvas.height);
     const realCanvasWidth = this.pointerCanvas.width - this.pointerCanvas.right - this.pointerCanvas.left;
     const realCanvasHeight = this.pointerCanvas.height - this.pointerCanvas.top - this.pointerCanvas.bottom;
     const CanvasYAxisZero = this.pointerCanvas.top + realCanvasHeight;
     const CanvasYAxisMax = this.pointerCanvas.top;
-    const X = event.offsetX;
-    const Y = event.offsetY;
-    this.drawPointUnderCursor(ctx, X, Y, CanvasYAxisZero);
+    const x = event.offsetX;
+    const y = event.offsetY;
+    this.drawPointUnderCursor(ctx, x, y, CanvasYAxisZero);
+    this.pointData.setPointData({
+      x,
+      y,
+      pixelData: this.pixelMatrix[x]
+    });
   }
 
   drawPointUnderCursor(ctx: CanvasRenderingContext2D, x: number, y: number, CanvasYAxisZero: number) {
@@ -125,14 +129,14 @@ export class PointerComponent implements OnInit {
       if (ratesIndex === -0) {
         ratesIndex = 0;
       }
-      const valueAsNumber = parseFloat(this.rates[ratesIndex].value.replace(',', '.'));
+      const valueAsNumber = this.rates[ratesIndex].value;
       this.pixelMatrix[i] = {
         x: Math.round(emptyPixelsAtCanvasLeft + ratesIndex * axisXPart),
         y: Math.round(this.pointerCanvas.top + (diff - (valueAsNumber - minYVal)) * axisYPart),
         value: this.rates[ratesIndex].value,
         date: this.rates[ratesIndex].date
       };
-      this.pixelMatrix[i].previous = this.pixelMatrix[i - 1] ? this.pixelMatrix[i].value >= this.pixelMatrix[i - 1].value : null;
+      this.pixelMatrix[i].previous = this.rates[ratesIndex - 1] ? this.rates[ratesIndex].value >= this.rates[ratesIndex - 1].value : null;
     }
     for (let i = maxCanvasChartZonePixel; i < this.pointerCanvas.width; i++) {
       this.pixelMatrix[i] = null;

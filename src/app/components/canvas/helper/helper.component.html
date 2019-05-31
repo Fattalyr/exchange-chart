@@ -1,7 +1,14 @@
-<div class="canv-helper" #helper>
-  <span class="canv-helper__date">{{tooltip.date}}</span>
-  <span class="canv-helper__data helper-data">
-			<span class="helper-data__cost">{{tooltip.cost}}</span>
-			<span class="helper-data__diff" [style.color]="tooltip.diffColor">{{tooltip.diff}}</span>
-		</span>
+<div class="canvas-helper"
+     #helper
+     *ngIf="point"
+     [style.display]="point.pixelData ? 'block' : 'none'"
+     [style.left]="point?.pixelData?.x + 'px'"
+     [style.top]="point?.pixelData?.y + 'px'"
+>
+  <span class="canvas-helper__date">{{point?.pixelData?.date}}</span>
+  <span class="canvas-helper__data helper-data">
+    <span class="helper-data__cost">{{point?.pixelData?.value}} ₽</span>
+    <span class="helper-data__diff" [style.color]="color">{{diff}}</span>
+  </span>
 </div>
+<div class="helper-event-interceptor" #eventInterceptor></div>
