@@ -38,9 +38,8 @@ export class ChooseDatesComponent implements OnInit {
   }
 
   /**
-   * Обновляет диапазон в хранилище.
-   * Реагирует на изменения даты и запрашивает с сервера ЦБР
-   * новый диапазон котировок.
+   * Renew range in the store.
+   * If dates are changed, it gets new data from the Bank of Russia.
    */
   rangeChange(): void {
     const startDate = this.transformDate(this.startDate.value);
@@ -77,9 +76,7 @@ export class ChooseDatesComponent implements OnInit {
   }
 
   /**
-   * Проверяем, не выбрана ли стартовая дата позже, чем конечная дата.
-   * Если да, то конечную дату меняем на стартовую, т.е. делаем,
-   * чтобы они совпадали.
+   * Check if start date is not later start date.
    */
   checkForOverdating(): void {
     const startDate = moment(this.startDate.value);
