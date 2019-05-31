@@ -33,7 +33,7 @@ export class PointerComponent implements OnInit {
 
   pointerCanvas: CanvasLayer = new CanvasLayer({idSelector: 'pointer'});
 
-  initialized = false; // Индикатор, инициализирован ли компонент.
+  initialized = false; // If component is initialized.
 
   @ViewChild('pointer') pointer: ElementRef;
 
@@ -98,8 +98,8 @@ export class PointerComponent implements OnInit {
   }
 
   /**
-   * Рассчитывает матрицу соответствий пиксей холста по оси X
-   * точкам на графике.
+   * Calculate the matrix in accordance with the resolution
+   * of pixels and the X-axis dots on the graph.
    */
   recalculatePixelMatrix() {
     const totalDays = this.rates.length;

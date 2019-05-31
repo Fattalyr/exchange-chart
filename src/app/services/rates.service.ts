@@ -3,7 +3,6 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { NgxXml2jsonService } from 'ngx-xml2json';
-import { isDevMode } from '@angular/core';
 import { IXMLData, IJSONPoint } from '../interfaces/xml.interface';
 import { ITimeline } from '../interfaces/timeline.interface';
 import { SharedRatesDataService } from './shared-rates-data.service';
@@ -13,7 +12,6 @@ import * as moment from 'moment';
   providedIn: 'root'
 })
 export class RatesService {
-  // private readonly root = isDevMode ? '/scripts/XML_dynamic.asp?' : 'http://www.cbr.ru/scripts/XML_dynamic.asp?';
   private readonly root = '/scripts/XML_dynamic.asp?';
   private startDate = '01/01/2018';
   private endDate = '31/12/2018';
@@ -102,7 +100,7 @@ export class RatesService {
   }
 
   /**
-   * Перегоняет дату из формата IJSONPoint в формат
+   * Converts date from IJSONPoint to format
    * [ DD: number, MM: number, YYYY: number ]
    * @param point - IJSONPoint
    */
@@ -117,16 +115,16 @@ export class RatesService {
     let max = -Infinity;
     this.sharedData.setRatesLength(len);
     for (let i = 0; i < len; i++) {
-      min = Math.min(min, parseFloat((data[i].value + '').replace(',', '.')));
-      max = Math.max(max, parseFloat((data[i].value + '').replace(',', '.')));
+      min = Math.min(min, (data[i].value));
+      max = Math.max(max, (data[i].value));
     }
     this.sharedData.setRatesMin(min);
     this.sharedData.setRatesMax(max);
   }
 
   /**
-   * Получает массив в формате IJSONPoint[],
-   * отдаёт их формате ITimeline.
+   * Converts array IJSONPoint[],
+   * to ITimeline format.
    */
   public processRates(data: IJSONPoint[] | {error: string}): Observable<ITimeline> {
     if ('error' in data) {

@@ -2,8 +2,6 @@
      #helper
      *ngIf="point"
      [style.display]="point.pixelData ? 'block' : 'none'"
-     [style.left]="point?.pixelData?.x + 'px'"
-     [style.top]="point?.pixelData?.y + 'px'"
 >
   <span class="canvas-helper__date">{{point?.pixelData?.date}}</span>
   <span class="canvas-helper__data helper-data">

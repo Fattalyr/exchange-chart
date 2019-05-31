@@ -31,7 +31,7 @@ export class ChartComponent implements OnInit {
 
   chartCanvas: CanvasLayer = new CanvasLayer({idSelector: 'chart'});
 
-  initialized = false; // Индикатор, инициализирован ли компонент.
+  initialized = false; // If component is initialized.
 
   @ViewChild('chart') chart: ElementRef;
 
@@ -43,6 +43,8 @@ export class ChartComponent implements OnInit {
     if (!this.timeline.length) {
       return;
     }
+    // tslint:disable-next-line:no-console
+    console.time('Time of the chart redrawing');
     const ctx = this.chartCanvas.domElement.getContext('2d');
     ctx.clearRect(0, 0, this.chartCanvas.width, this.chartCanvas.height);
     const realCanvasWidth = this.chartCanvas.width - this.chartCanvas.right - this.chartCanvas.left;
@@ -57,25 +59,27 @@ export class ChartComponent implements OnInit {
     this.drawLines(ctx, CanvasYAxisZero, CanvasYAxisMax, realCanvasWidth, realCanvasHeight, maxYVal, minYVal);
     this.drawLabels(ctx, CanvasYAxisZero, CanvasYAxisMax, realCanvasWidth, realCanvasHeight, axisXPart);
     this.drawCurve(ctx, CanvasYAxisZero, CanvasYAxisMax, axisXPart, maxYVal, minYVal);
+    // tslint:disable-next-line:no-console
+    console.timeEnd('Time of the chart redrawing');
   }
 
   /**
-   * Рисует горизонтальные линии графика.
-   * @param ctx - контекст.
-   * @param CanvasYAxisZero - координата Y "нуля", т.е. откуда начинаем рисовать по высоте.
-   * @param realCanvasWidth - реальная ширина холста, с вычетом отступов.
-   * @param realCanvasHeight - реальная высота холста, с вычетом отступов.
-   * @param CanvasYAxisMax - максимально высокая координата по Y.
-   * @param maxYVal - Верхний порог по шкале для графика.
-   * @param minYVal - Нижний порог по шкале для графика.
+   * Draw horizontal lines of the chart.
+   * @param ctx - 2D context of canvas.
+   * @param CanvasYAxisZero - "zero" Y coordinate, i.e. it's where we start to draw from.
+   * @param realCanvasWidth - real canvas width without offsets.
+   * @param realCanvasHeight - real canvas height without offsets.
+   * @param CanvasYAxisMax - maximum coordinate for Y axis.
+   * @param maxYVal - maximum cost value for Y axis of the chart.
+   * @param minYVal - minimum cost value for Y axis of the chart.
    */
   // tslint:disable-next-line:max-line-length
   drawLines(ctx: CanvasRenderingContext2D, CanvasYAxisZero: number, CanvasYAxisMax: number, realCanvasWidth: number, realCanvasHeight: number, maxYVal: number, minYVal: number) {
-    let linYVal; // Значение шкалы линии коридора по оси Y.
-    let linY; // Линия коридора, значение будет меняться в ходе работы.
-    const leftTextOffset = 32; // Смещение текста подписей линий влево.
+    let linYVal; // Value of corridor line.
+    let linY; // Currency corridor line coordinate.
+    const leftTextOffset = 32; // Text offset to the left.
 
-    // Ось X
+    // Axis X
     ctx.beginPath();
     ctx.moveTo(this.chartCanvas.left, Math.round(CanvasYAxisZero));
     ctx.lineTo(this.chartCanvas.left + realCanvasWidth, Math.round(CanvasYAxisZero));
@@ -84,7 +88,7 @@ export class ChartComponent implements OnInit {
     ctx.lineCap = 'square';
     ctx.stroke();
 
-    // Верхняя линия коридора
+    // Top line of currency corridor
     ctx.beginPath();
     ctx.moveTo(this.chartCanvas.left, Math.round(CanvasYAxisMax));
     ctx.lineTo(this.chartCanvas.left + realCanvasWidth, Math.round(CanvasYAxisMax));
@@ -93,7 +97,7 @@ export class ChartComponent implements OnInit {
     ctx.lineCap = 'square';
     ctx.stroke();
 
-    // Линия нижней трети
+    // Bottom third line
     ctx.beginPath();
     linYVal = Math.floor((minYVal + (maxYVal - minYVal) * 0.3333) * 10) / 10;
     linY = Math.round(this.chartCanvas.top + (realCanvasHeight * 0.6667));
@@ -108,7 +112,7 @@ export class ChartComponent implements OnInit {
     ctx.fillStyle = '#99a0a8';
     ctx.fillText(linYVal + '', this.chartCanvas.left - leftTextOffset, linY + 3);
 
-    // Линия верхней трети
+    // Line two-thirds
     ctx.beginPath();
     linYVal = Math.floor((minYVal + (maxYVal - minYVal) * 0.6667) * 10) / 10;
     linY = Math.round(this.chartCanvas.top + (realCanvasHeight * 0.3333));
@@ -131,20 +135,20 @@ export class ChartComponent implements OnInit {
   }
 
   /**
-   * Рисует подписи лет и месяцев.
-   * @param ctx - контекст.
-   * @param CanvasYAxisZero - координата Y "нуля", т.е. откуда начинаем рисовать по высоте.
-   * @param realCanvasWidth - реальная ширина холста, с вычетом отступов.
-   * @param realCanvasHeight - реальная высота холста, с вычетом отступов.
-   * @param CanvasYAxisMax - максимально высокая координата по Y.
-   * @param axisXPart - пикселей в одном дне на графике.
+   * Draw months and years labels.
+   * @param ctx - 2D context of canvas.
+   * @param CanvasYAxisZero - "zero" Y coordinate, i.e. it's where we start to draw from.
+   * @param realCanvasWidth - real canvas width without offsets.
+   * @param realCanvasHeight - real canvas height without offsets.
+   * @param CanvasYAxisMax - maximum coordinate for Y axis.
+   * @param axisXPart - pixels per one day on X axis.
    */
   // tslint:disable-next-line:max-line-length
   drawLabels(ctx: CanvasRenderingContext2D, CanvasYAxisZero: number, CanvasYAxisMax: number, realCanvasWidth: number, realCanvasHeight: number, axisXPart: number) {
     ctx.beginPath();
     const tl = this.timeline;
-    let dayNumber = 0; // Номер дня от начала данных.
-    let currentOffset = this.chartCanvas.left; // Смещение по оси X, по мере того, как сменяются дни.
+    let dayNumber = 0; // Number of current day.
+    let currentOffset = this.chartCanvas.left; // X offset in pixels.
     for (const year in tl) {
       if (year === 'length') {
         continue;
@@ -157,11 +161,11 @@ export class ChartComponent implements OnInit {
           if (day === 'length') {
             continue;
           }
-          // Если начало года.
+          // If year just has been started.
           if (tl[year][month][day].yearStart) {
             this.drawYearLabel(ctx, currentOffset, CanvasYAxisZero, year, month, axisXPart);
           }
-          // Если начало месяца.
+          // If month just has been started.
           if (tl[year][month][day].monthStart) {
             this.drawMonthLabel(ctx, currentOffset, CanvasYAxisZero, year, month, day, axisXPart);
           }
@@ -173,8 +177,8 @@ export class ChartComponent implements OnInit {
   }
 
   /**
-   * Устанавливает стиль надписей по умолчанию.
-   * @param ctx - контекст.
+   * Define the label style by default.
+   * @param ctx - 2D context of canvas.
    */
   defaultCanvasText(ctx: CanvasRenderingContext2D) {
     ctx.beginPath();
@@ -184,8 +188,8 @@ export class ChartComponent implements OnInit {
   }
 
   /**
-   * Устанавливает стиль кривой по умолчанию.
-   * @param ctx - контекст.
+   * Define the curve style by default.
+   * @param ctx - 2D context of canvas.
    */
   defaultCurveLineStyle(ctx: CanvasRenderingContext2D) {
     ctx.lineWidth = 2;
@@ -194,13 +198,13 @@ export class ChartComponent implements OnInit {
   }
 
   /**
-   * Рисует метку года.
-   * @param ctx - контекст.
-   * @param currentOffset - текущее смещение по оси X.
-   * @param CanvasYAxisZero - координаты нуля по оси Y.
-   * @param year - отрисовываемый год.
-   * @param month - чтобы проверить, если год начинается с декабря.
-   * @param axisXPart - сколько пикселей в "дне" по оси X.
+   * Draw year label.
+   * @param ctx - 2D context of canvas.
+   * @param currentOffset - current X-offset.
+   * @param CanvasYAxisZero - "zero" Y coordinate, i.e. it's where we start to draw from.
+   * @param year - drawing year.
+   * @param month - it's for check if year started from December.
+   * @param axisXPart - pixels per one day on X axis.
    */
   // tslint:disable-next-line:max-line-length
   drawYearLabel(ctx: CanvasRenderingContext2D, currentOffset: number, CanvasYAxisZero: number, year: string, month: string, axisXPart: number) {
@@ -223,14 +227,14 @@ export class ChartComponent implements OnInit {
   }
 
   /**
-   * Отрисовывает название месяца.
-   * @param ctx - контекст.
-   * @param currentOffset - текущее смещение по оси X.
-   * @param CanvasYAxisZero - координаты нуля по оси Y.
-   * @param year - год.
-   * @param month - месяц.
-   * @param day - день.
-   * @param axisXPart - сколько пикселей в "дне" по оси X.
+   * Draw month label.
+   * @param ctx - 2D context of canvas.
+   * @param currentOffset - current X-offset.
+   * @param CanvasYAxisZero - "zero" Y coordinate, i.e. it's where we start to draw from.
+   * @param year - year.
+   * @param month - month.
+   * @param day - day.
+   * @param axisXPart - pixels per one day on X axis.
    */
   // tslint:disable-next-line:max-line-length
   drawMonthLabel(ctx: CanvasRenderingContext2D, currentOffset: number, CanvasYAxisZero: number, year: number | string, month: number | string, day: number | string, axisXPart: number) {
@@ -260,18 +264,16 @@ export class ChartComponent implements OnInit {
   }
 
   /**
-   * Рисует кривую графика.
-   * @param ctx - контекст.
-   * @param CanvasYAxisZero - координаты нуля по оси Y.
-   * @param CanvasYAxisMax - максимум по оси Y.
-   * @param axisXPart - сколько пикселей в одном "дне" по оси X.
-   * @param maxYVal - максимальное значение коридора.
-   * @param minYVal - минимальное значение коридора.
+   * Draw the curve.
+   * @param ctx - 2D context of canvas.
+   * @param CanvasYAxisZero - "zero" Y coordinate, i.e. it's where we start to draw from.
+   * @param CanvasYAxisMax - maximum coordinate for Y axis.
+   * @param axisXPart - pixels per one day on X axis.
+   * @param maxYVal - maximum cost value for Y axis of the chart.
+   * @param minYVal - minimum cost value for Y axis of the chart.
    */
   // tslint:disable-next-line:max-line-length
   drawCurve(ctx: CanvasRenderingContext2D, CanvasYAxisZero: number, CanvasYAxisMax: number, axisXPart: number, maxYVal: number, minYVal: number) {
-    // tslint:disable-next-line:no-console
-    console.time('timeOfRedraw');
     ctx.beginPath();
     this.defaultCurveLineStyle(ctx);
     const tl = this.timeline;
@@ -305,8 +307,6 @@ export class ChartComponent implements OnInit {
       }
     }
     ctx.stroke();
-    // tslint:disable-next-line:no-console
-    console.timeEnd('timeOfRedraw');
   }
 
   ngOnInit() {
