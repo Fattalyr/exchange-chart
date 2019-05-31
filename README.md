@@ -4,7 +4,7 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 
 It works with local server only, because Bank of Russia does not send header "Access-Control-Allow-Origin: *". 
 
-![Screenshot](https://github.com/Dotcommando/rates-exchange-ngrx/develop/ngrx-currency-rates.png)
+![Screenshot](https://raw.githubusercontent.com/Dotcommando/rates-exchange-ngrx/develop/ngrx-currency-rates.png)
 
 ## Development server
 

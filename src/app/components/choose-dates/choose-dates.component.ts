@@ -38,8 +38,8 @@ export class ChooseDatesComponent implements OnInit {
   }
 
   /**
-   * Renew range in the store.
-   * If dates are changed, it gets new data from the Bank of Russia.
+   * Renew range of dates in the store.
+   * If dates changed, it gets new rates from Bank of Russia server.
    */
   rangeChange(): void {
     const startDate = this.transformDate(this.startDate.value);
@@ -76,7 +76,7 @@ export class ChooseDatesComponent implements OnInit {
   }
 
   /**
-   * Check if start date is not later start date.
+   * Check if start date is not later end date.
    */
   checkForOverdating(): void {
     const startDate = moment(this.startDate.value);
